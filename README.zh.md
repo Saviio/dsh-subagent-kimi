@@ -127,4 +127,4 @@ npm pack --dry-run
 - [Kimi `acp` 文档](https://www.kimi.com/code/docs/en/kimi-code-cli/reference/kimi-acp.html)
 - [Kimi 命令文档](https://www.kimi.com/code/docs/en/kimi-code-cli/reference/kimi-command.html)
 
-基于 MIT 发布，详见 [LICENSE](LICENSE)。
+基于 MIT 发布，详见 [LICENSE](LICENSE)。Kimi 名称和 logo 是 Moonshot AI 的商标。本插件是第三方插件，不是 Moonshot AI 官方产品；图标来源见 [NOTICE](NOTICE)。

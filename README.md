@@ -127,4 +127,4 @@ The implementation follows DeepSeek Harness's Codex product-provider structure a
 - [Kimi `acp` reference](https://www.kimi.com/code/docs/en/kimi-code-cli/reference/kimi-acp.html)
 - [Kimi command reference](https://www.kimi.com/code/docs/en/kimi-code-cli/reference/kimi-command.html)
 
-Released under MIT; see [LICENSE](LICENSE).
+Released under MIT; see [LICENSE](LICENSE). Kimi name and logo are trademarks of Moonshot AI. This is a third-party plugin, not an official Moonshot AI product; see [NOTICE](NOTICE) for icon attribution.

@@ -34,7 +34,8 @@
     "./cordis.patch.yml": "./cordis.patch.yml"
   },
   "files": [
-    "icon.svg",
+    "icon.png",
+    "NOTICE",
     "locale/*.json",
     "lib/**/*.js",
     "lib/**/*.d.ts",
@@ -51,7 +52,7 @@
       "patch": "./cordis.patch.yml"
     }
   },
-  "icon": "./icon.svg",
+  "icon": "./icon.png",
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('lib', { recursive: true, force: true })\"",
     "build": "tsc -p tsconfig.json",
