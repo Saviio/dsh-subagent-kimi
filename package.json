@@ -1,6 +1,6 @@
 {
   "name": "dsh-subagent-kimi",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "One-shot Kimi Code CLI subagent provider for DeepSeek Harness over ACP",
   "keywords": [
     "deepseek-harness",
