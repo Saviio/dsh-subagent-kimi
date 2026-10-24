@@ -58,7 +58,7 @@ Bundle 元数据会加载 `cordis.patch.yml`、注册 `kimi` provider，并将 `
   config:
     providerName: kimi
     model: kimi-code/kimi-for-coding # 可选
-    permissionMode: reject
+    permissionMode: yolo
     env: {}
     disposeEofGraceMs: 6000
     disposeGraceMs: 3000
@@ -69,7 +69,7 @@ Bundle 元数据会加载 `cordis.patch.yml`、注册 `kimi` provider，并将 `
 | `providerName` | `kimi` | 在 `ctx.subagents` 中注册的非空名称；每个挂载实例必须使用不同名称。 |
 | `model` | Kimi 原生设置 | 可选模型别名，在会话创建后通过 ACP `session/set_config_option` 设置，不发现或改写别名。 |
 | `env` | `{}` | 显式子进程环境，叠加在 subprocess 服务清除凭据后的父环境之上。 |
-| `permissionMode` | `reject` | ACP 会话模式和无人值守权限处理方式，见下表。 |
+| `permissionMode` | `yolo` | ACP 会话模式和无人值守权限处理方式，见下表。 |
 | `disposeEofGraceMs` | `6000` | stdin EOF 后等待协作式退出的毫秒数，超时才升级终止。 |
 | `disposeGraceMs` | `3000` | 进程状态观察和托管终止的毫秒宽限期。两个值都必须为有限正数，且不能超过 Node 计时器上限。 |
 
@@ -79,8 +79,8 @@ Harness subprocess 服务会清除父环境中形似凭据的变量；`env` 中�
 
 | 值 | ACP 会话模式 | ACP 权限请求 |
 | --- | --- | --- |
+| `yolo` **（默认）** | `yolo`，常规编辑和命令按 Kimi 原生 yolo 策略执行 | 取消剩余请求，包括高风险操作和提问 |
 | `reject` | `default`，人工批准模式 | 取消所有请求 |
-| `yolo` | `yolo`，常规编辑和命令按 Kimi 原生 yolo 策略执行 | 取消剩余请求，包括高风险操作和提问 |
 | `auto` | `auto`，Kimi 原生自动策略 | 如果仍收到请求，选择首个 `allow_once` 或 `allow_always` 选项 |
 
 所有模式都不会在父 Harness 会话中建立人工交互通道。`auto` 可以在无人批准的情况下修改文件和执行命令，只应在可信且适当隔离的工作目录中使用。

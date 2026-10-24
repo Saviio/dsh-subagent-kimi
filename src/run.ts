@@ -35,7 +35,7 @@ export const KIMI_PERMISSION_MODES = [
   'auto',
 ] as const satisfies readonly KimiPermissionMode[]
 
-export const DEFAULT_KIMI_PERMISSION_MODE: KimiPermissionMode = 'reject'
+export const DEFAULT_KIMI_PERMISSION_MODE: KimiPermissionMode = 'yolo'
 export const DEFAULT_DISPOSE_EOF_GRACE_MS = 6_000
 export const DEFAULT_DISPOSE_GRACE_MS = 3_000
 

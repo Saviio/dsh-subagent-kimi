@@ -58,7 +58,7 @@ To mount the provider and tool manually, use:
   config:
     providerName: kimi
     model: kimi-code/kimi-for-coding # optional
-    permissionMode: reject
+    permissionMode: yolo
     env: {}
     disposeEofGraceMs: 6000
     disposeGraceMs: 3000
@@ -69,7 +69,7 @@ To mount the provider and tool manually, use:
 | `providerName` | `kimi` | Non-empty registry name on `ctx.subagents`; each mounted instance needs a unique name. |
 | `model` | Kimi native settings | Optional model alias set through ACP `session/set_config_option` after session creation. No alias discovery or rewriting is performed. |
 | `env` | `{}` | Explicit child environment layered over the subprocess service's credential-scrubbed parent environment. |
-| `permissionMode` | `reject` | ACP session mode and unattended permission behavior; see below. |
+| `permissionMode` | `yolo` | ACP session mode and unattended permission behavior; see below. |
 | `disposeEofGraceMs` | `6000` | Time in milliseconds allowed for cooperative shutdown after stdin EOF before termination escalation. |
 | `disposeGraceMs` | `3000` | Process-observation and managed termination grace in milliseconds. Both grace values must be positive, finite, and within Node's timer limit. |
 
@@ -80,7 +80,7 @@ Credential-shaped ambient variables are scrubbed by the Harness subprocess servi
 | Value | ACP session mode | ACP permission requests |
 | --- | --- | --- |
 | `reject` | `default`; manual approvals | Cancel every request |
-| `yolo` | `yolo`; routine edits and commands run under Kimi's native yolo policy | Cancel remaining requests, including risky actions and questions |
+| `yolo` **(default)** | `yolo`; routine edits and commands run under Kimi's native yolo policy | Cancel remaining requests, including risky actions and questions |
 | `auto` | `auto`; Kimi's native automatic policy | Select the first `allow_once` or `allow_always` option if a request still arrives |
 
 No mode creates a human interaction channel in the parent Harness session. `auto` can modify files and execute commands without human approval; use it only in trusted, appropriately isolated workspaces.
