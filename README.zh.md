@@ -9,10 +9,18 @@
 ## 环境要求
 
 - Node.js 24.9.0 或更高版本。
-- 已验证的 DeepSeek Harness `0.2.1-rc.3` 依赖线。
-- 已通过 Kimi Code CLI 配置认证和模型提供商。委派前请先运行 `kimi login` 或按正常方式完成 Kimi 配置。
+- DeepSeek Harness `>=0.2.1-rc.2 <0.3.0`，已验证 `0.2.1-rc.2` 和 `0.2.1-rc.3`。
+- 可通过 `PATH` 找到 Kimi Code CLI（`kimi`），并已在 Kimi 中配置认证和模型提供商。已验证版本为 2.3.1，建议使用当前发布版。
 
-本包固定依赖 `@moonshot-ai/kimi-code@2.3.1`，并调用该 npm 包内的 CLI；**不会**执行宿主机 `PATH` 中的 `kimi`，也没有宿主机 CLI 回退机制。Kimi 原生配置和认证仍以 `KIMI_CODE_HOME` 或 `~/.kimi-code` 为准。
+安装或升级 Kimi，然后检查版本和认证：
+
+```sh
+npm install -g @moonshot-ai/kimi-code@latest
+kimi --version
+kimi login
+```
+
+Provider 每次委派都通过 subprocess 服务的 `PATH` 查找启动 `kimi`，插件本身不携带 Kimi 运行时。Kimi 原生配置和认证仍以 `KIMI_CODE_HOME` 或 `~/.kimi-code` 为准。
 
 ## 安装
 
@@ -82,8 +90,8 @@ Harness subprocess 服务会清除父环境中形似凭据的变量；`env` 中�
 ## 行为与结果
 
 - 仅接受非空文本块序列；图片等内容类型会在启动进程前被拒绝。
-- 每次运行都创建新的包内 `node <kimi-code> acp` 进程和 ACP 会话，不复用进程，不支持追加输入或恢复会话。
-- ACP `initialize`、`session/new`、`session/set_mode` 和可选的 `session/set_config_option` 成功后才发布 run；配置失败使用 `configure-session` 阶段，并先清理尚未发布的私有进程。
+- 每次运行都通过 `PATH` 启动独立的 `kimi acp` 可执行文件和 ACP 会话，不复用进程，不支持追加输入或恢复会话。使用 Kimi 自己的可执行文件而不是 DSH 的 Electron 二进制，也避免了 macOS 在 Dock 中再注册一个 DSH/Electron 应用。
+- 启动时完成 ACP `initialize`、`session/new`、`session/set_mode` 和可选的 `session/set_config_option`，成功后才发布 run；配置失败使用 `configure-session` 阶段，并先清理尚未发布的私有进程。
 - `session/prompt` 只执行一次任务。收集流式 `agent_message_chunk` 文本；思考、计划、工具调用等更新会被消费但不作为结果返回。
 - ACP 停止原因映射为 Harness 的 `completed`、`max-tokens`、`refusal`、`aborted` 或 `error`。未知原因，以及声称成功却没有任何助手文本的情况，均按错误处理。
 - 取消会尽力发送 `session/cancel`，在本地及时结算，并最终由进程清理兜底。
@@ -99,7 +107,8 @@ Provider 不继承父对话，也不声明任何可选 start capabilities。需�
 - 每次运行仅处理一个文本任务，不支持续聊、恢复、进度流或父上下文继承。
 - 没有内置墙钟超时，也不会回滚取消前已经发生的文件或外部系统副作用。
 - Kimi 原生设置、hooks、skills 和账号状态会影响子进程。部署策略需要独立 Kimi home 时，可在 `env` 中显式设置 `KIMI_CODE_HOME`，并在该 home 中单独配置认证。
-- 当前兼容基线为 Kimi Code CLI 2.3.1、ACP SDK 1.4.0 和 DeepSeek Harness 0.2.1-rc.3。升级这些依赖后，应重新完成协议和真实产品验证。
+- 用户负责 Kimi 的安装和升级。DSH 可见的 `PATH` 必须解析到兼容的 Kimi CLI。已验证版本为 2.3.1；旧版本不会被显式拒绝，但必须支持本插件使用的 ACP 方法。
+- 兼容基线为 Kimi Code CLI 2.3.1、ACP SDK 1.4.0 和 DeepSeek Harness `>=0.2.1-rc.2 <0.3.0`，已验证 DSH `0.2.1-rc.2` 和 `0.2.1-rc.3`。超出这些基线升级 Kimi 或 DSH 后，应重新完成协议和真实产品验证。
 
 ## 开发
 

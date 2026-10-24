@@ -1,7 +1,4 @@
 import { randomUUID } from 'node:crypto'
-import { readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { dirname, resolve } from 'node:path'
 import { Readable as NodeReadable, Writable as NodeWritable } from 'node:stream'
 import {
   client as createAcpClientApp,
@@ -41,22 +38,6 @@ export const KIMI_PERMISSION_MODES = [
 export const DEFAULT_KIMI_PERMISSION_MODE: KimiPermissionMode = 'reject'
 export const DEFAULT_DISPOSE_EOF_GRACE_MS = 6_000
 export const DEFAULT_DISPOSE_GRACE_MS = 3_000
-
-interface KimiPackageManifest {
-  readonly bin: {
-    readonly kimi: string
-  }
-}
-
-const kimiPackageJsonPath = createRequire(import.meta.url)
-  .resolve('@moonshot-ai/kimi-code/package.json')
-const kimiPackageManifest = JSON.parse(
-  readFileSync(kimiPackageJsonPath, 'utf8'),
-) as KimiPackageManifest
-const KIMI_PACKAGE_BIN = resolve(
-  dirname(kimiPackageJsonPath),
-  kimiPackageManifest.bin.kimi,
-)
 
 export interface KimiRunSpec {
   readonly cwd: string
@@ -155,7 +136,7 @@ export function kimiConfigurationFailure(cause: unknown): Error {
 }
 
 export function kimiAcpArgv(): string[] {
-  return [process.execPath, KIMI_PACKAGE_BIN, 'acp']
+  return ['kimi', 'acp']
 }
 
 export function kimiTextTask(prompt: readonly ContentBlock[]): string[] {

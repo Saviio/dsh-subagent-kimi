@@ -9,10 +9,18 @@ Each delegation starts a fresh Kimi process and ACP session in the selected work
 ## Requirements
 
 - Node.js 24.9.0 or later.
-- DeepSeek Harness packages on the verified `0.2.1-rc.3` release line.
-- Kimi Code authentication and provider settings configured through Kimi Code CLI. Run `kimi login` or configure Kimi normally before delegating.
+- DeepSeek Harness `>=0.2.1-rc.2 <0.3.0`; both `0.2.1-rc.2` and `0.2.1-rc.3` are verified.
+- Kimi Code CLI available as `kimi` on `PATH`, with authentication and provider settings configured through Kimi. Version 2.3.1 is the verified baseline; using the current release is recommended.
 
-The package pins `@moonshot-ai/kimi-code@2.3.1` and invokes its package-local CLI. It does **not** execute `kimi` from the host `PATH`, and there is no host-CLI fallback. Native Kimi configuration and authentication remain authoritative under `KIMI_CODE_HOME` or `~/.kimi-code`.
+Install or upgrade Kimi, then check its version and authentication:
+
+```sh
+npm install -g @moonshot-ai/kimi-code@latest
+kimi --version
+kimi login
+```
+
+The provider resolves `kimi` through the subprocess service's `PATH` lookup on every delegation; it does not bundle a Kimi runtime. Native Kimi configuration and authentication remain authoritative under `KIMI_CODE_HOME` or `~/.kimi-code`.
 
 ## Install
 
@@ -82,7 +90,7 @@ No mode creates a human interaction channel in the parent Harness session. `auto
 ## Behavior
 
 - The provider accepts only a non-empty sequence of text blocks. Images and other content types are rejected before a process starts.
-- Every run uses a new package-local `node <kimi-code> acp` process and a new ACP session. There is no process pooling, follow-up input, or resume.
+- Every run starts a fresh `kimi acp` executable resolved from `PATH` and a new ACP session. There is no process pooling, follow-up input, or resume. Using Kimi's own executable rather than the DSH Electron binary also prevents macOS from registering another DSH/Electron app in the Dock.
 - Startup completes ACP `initialize`, `session/new`, `session/set_mode`, and optional `session/set_config_option` before publishing the run. Configuration failures use the `configure-session` stage and clean up the private process before rejecting.
 - `session/prompt` executes exactly one task. Streamed `agent_message_chunk` text is collected; thoughts, plans, tool calls, and other updates are consumed but not returned.
 - ACP stop reasons map to Harness `completed`, `max-tokens`, `refusal`, `aborted`, or `error`. Unknown reasons and a successful stop with no assistant text are treated as errors.
@@ -99,7 +107,8 @@ The provider advertises no optional start capabilities and does not inherit the 
 - One run is one text-only task. There is no continuation, resume, progress stream, or parent-context inheritance.
 - There is no built-in wall-clock timeout and no rollback of files or external systems changed before cancellation.
 - Native Kimi settings, hooks, skills, and account state can affect the child. Use an explicit isolated `KIMI_CODE_HOME` in `env` when deployment policy requires a separate Kimi home, and configure authentication there separately.
-- Compatibility is pinned by development evidence to Kimi Code CLI 2.3.1, ACP SDK 1.4.0, and DeepSeek Harness 0.2.1-rc.3. Upgrade these together only after rerunning protocol and real-product verification.
+- The user owns Kimi installation and upgrades. The `PATH` visible to DSH must resolve to a compatible Kimi CLI. Version 2.3.1 is verified; older versions are not blocked explicitly, but must support the ACP methods used by this provider.
+- Compatibility is based on Kimi Code CLI 2.3.1, ACP SDK 1.4.0, and DeepSeek Harness `>=0.2.1-rc.2 <0.3.0`. Both DSH `0.2.1-rc.2` and `0.2.1-rc.3` are verified. Upgrade Kimi or DSH beyond these baselines only after rerunning protocol and real-product verification.
 
 ## Development
 
