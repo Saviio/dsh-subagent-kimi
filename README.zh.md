@@ -55,9 +55,9 @@ Bundle 元数据会加载 `cordis.patch.yml`、注册 `kimi` provider，并将 `
 | 字段 | 默认值 | 含义 |
 | --- | --- | --- |
 | `providerName` | `kimi` | 在 `ctx.subagents` 中注册的非空名称；每个挂载实例必须使用不同名称。 |
-| `model` | Kimi 原生设置 | 可选模型别名，通过 Kimi 全局 `--model` 参数传递，不发现或改写别名。 |
+| `model` | Kimi 原生设置 | 可选模型别名，在会话创建后通过 ACP `session/set_config_option` 设置，不发现或改写别名。 |
 | `env` | `{}` | 显式子进程环境，叠加在 subprocess 服务清除凭据后的父环境之上。 |
-| `permissionMode` | `reject` | Kimi 启动模式和 ACP 无人值守权限处理方式，见下表。 |
+| `permissionMode` | `reject` | ACP 会话模式和无人值守权限处理方式，见下表。 |
 | `disposeEofGraceMs` | `6000` | stdin EOF 后等待协作式退出的毫秒数，超时才升级终止。 |
 | `disposeGraceMs` | `3000` | 进程状态观察和托管终止的毫秒宽限期。两个值都必须为有限正数，且不能超过 Node 计时器上限。 |
 
@@ -65,21 +65,21 @@ Harness subprocess 服务会清除父环境中形似凭据的变量；`env` 中�
 
 ### 权限模式
 
-| 值 | Kimi 启动方式 | ACP 权限请求 |
+| 值 | ACP 会话模式 | ACP 权限请求 |
 | --- | --- | --- |
-| `reject` | 不覆盖启动模式，使用 Kimi 原生设置 | 取消所有请求 |
-| `yolo` | `--yolo`，常规编辑和命令按 Kimi 策略自动执行 | 取消剩余请求，包括高风险操作和提问 |
-| `auto` | `--auto`，Kimi Never Ask 模式 | 如果仍收到请求，选择首个 `allow_once` 或 `allow_always` 选项 |
+| `reject` | `default`，人工批准模式 | 取消所有请求 |
+| `yolo` | `yolo`，常规编辑和命令按 Kimi 原生 yolo 策略执行 | 取消剩余请求，包括高风险操作和提问 |
+| `auto` | `auto`，Kimi 原生自动策略 | 如果仍收到请求，选择首个 `allow_once` 或 `allow_always` 选项 |
 
 所有模式都不会在父 Harness 会话中建立人工交互通道。`auto` 可以在无人批准的情况下修改文件和执行命令，只应在可信且适当隔离的工作目录中使用。
 
-**`reject` 不是沙箱，也不是只读保证。** 它只拒绝 Kimi 通过 ACP 发出的请求；Kimi 原生配置直接允许的操作不会产生此类请求。需要限制副作用时，请使用操作系统或 Harness 工作区隔离。
+**`reject` 不是沙箱，也不是只读保证。** 它只拒绝 Kimi 通过 ACP 发出的请求；Kimi 不发起 ACP 请求就直接允许的操作仍可能执行。需要限制副作用时，请使用操作系统或 Harness 工作区隔离。
 
 ## 行为与结果
 
 - 仅接受非空文本块序列；图片等内容类型会在启动进程前被拒绝。
-- 每次运行都创建新的包内 `node <kimi-code> [...] acp` 进程和 ACP 会话，不复用进程，不支持追加输入或恢复会话。
-- ACP `initialize` 和 `session/new` 成功后才发布 run；启动失败会先清理尚未发布的私有进程。
+- 每次运行都创建新的包内 `node <kimi-code> acp` 进程和 ACP 会话，不复用进程，不支持追加输入或恢复会话。
+- ACP `initialize`、`session/new`、`session/set_mode` 和可选的 `session/set_config_option` 成功后才发布 run；配置失败使用 `configure-session` 阶段，并先清理尚未发布的私有进程。
 - `session/prompt` 只执行一次任务。收集流式 `agent_message_chunk` 文本；思考、计划、工具调用等更新会被消费但不作为结果返回。
 - ACP 停止原因映射为 Harness 的 `completed`、`max-tokens`、`refusal`、`aborted` 或 `error`。未知原因，以及声称成功却没有任何助手文本的情况，均按错误处理。
 - 取消会尽力发送 `session/cancel`，在本地及时结算，并最终由进程清理兜底。

@@ -32,7 +32,7 @@ export interface Config {
   model?: string
   /** Explicit environment entries layered over the scrubbed parent environment. */
   env?: Record<string, string>
-  /** Non-interactive Kimi launch and ACP permission behavior. */
+  /** ACP session mode and unattended permission behavior. */
   permissionMode?: KimiPermissionMode
   /** Grace in milliseconds for cooperative EOF shutdown before termination. */
   disposeEofGraceMs?: number

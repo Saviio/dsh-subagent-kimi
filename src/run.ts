@@ -72,6 +72,7 @@ export interface KimiRunSpec {
 type KimiFailureStage =
   | 'initialize'
   | 'new-session'
+  | 'configure-session'
   | 'prompt'
   | 'process'
   | 'teardown'
@@ -153,16 +154,8 @@ export function kimiConfigurationFailure(cause: unknown): Error {
   }, cause)
 }
 
-export function kimiAcpArgv(
-  model?: string,
-  permissionMode: KimiPermissionMode = DEFAULT_KIMI_PERMISSION_MODE,
-): string[] {
-  const argv = [process.execPath, KIMI_PACKAGE_BIN]
-  if (model !== undefined) argv.push('--model', model)
-  if (permissionMode === 'yolo') argv.push('--yolo')
-  if (permissionMode === 'auto') argv.push('--auto')
-  argv.push('acp')
-  return argv
+export function kimiAcpArgv(): string[] {
+  return [process.execPath, KIMI_PACKAGE_BIN, 'acp']
 }
 
 export function kimiTextTask(prompt: readonly ContentBlock[]): string[] {
@@ -260,7 +253,10 @@ export function kimiContentText(content: AcpContentBlock): string {
 
 function startupFailure(
   error: unknown,
-  stage: Extract<KimiFailureStage, 'initialize' | 'new-session'>,
+  stage: Extract<
+    KimiFailureStage,
+    'initialize' | 'new-session' | 'configure-session'
+  >,
   outcome: SubprocessOutcome | undefined,
 ): KimiRunFailure {
   return new KimiRunFailure(
@@ -312,7 +308,7 @@ export async function startKimiRun(
   let child: SubprocessHandle
   try {
     child = spec.spawn({
-      argv: kimiAcpArgv(spec.model, spec.permissionMode),
+      argv: kimiAcpArgv(),
       cwd: spec.cwd,
       stdio: { stdin: 'pipe', stdout: 'pipe', stderr: 'inherit' },
       graceMs: spec.disposeGraceMs,
@@ -422,7 +418,10 @@ export async function startKimiRun(
   const agent = connection.agent
 
   let sessionId: string | undefined
-  let startupStage: Extract<KimiFailureStage, 'initialize' | 'new-session'> = 'initialize'
+  let startupStage: Extract<
+    KimiFailureStage,
+    'initialize' | 'new-session' | 'configure-session'
+  > = 'initialize'
   let signalCancelSettled!: () => void
   const cancelSettled = new Promise<void>((resolve) => {
     signalCancelSettled = resolve
@@ -461,6 +460,18 @@ export async function startKimiRun(
           }, new Error('Kimi ACP published without a session id'))
         }
         sessionId = returnedSessionId
+        startupStage = 'configure-session'
+        await agent.request(methods.agent.session.setMode, {
+          sessionId: returnedSessionId,
+          modeId: spec.permissionMode === 'reject' ? 'default' : spec.permissionMode,
+        })
+        if (spec.model !== undefined) {
+          await agent.request(methods.agent.session.setConfigOption, {
+            sessionId: returnedSessionId,
+            configId: 'model',
+            value: spec.model,
+          })
+        }
         if (flags.cancelled) {
           throw new Error('subagent-kimi: cancelled before the ACP session started')
         }

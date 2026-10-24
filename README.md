@@ -55,9 +55,9 @@ To mount the provider and tool manually, use:
 | Field | Default | Meaning |
 | --- | --- | --- |
 | `providerName` | `kimi` | Non-empty registry name on `ctx.subagents`; each mounted instance needs a unique name. |
-| `model` | Kimi native settings | Optional model alias passed as Kimi's global `--model` option. No alias discovery or rewriting is performed. |
+| `model` | Kimi native settings | Optional model alias set through ACP `session/set_config_option` after session creation. No alias discovery or rewriting is performed. |
 | `env` | `{}` | Explicit child environment layered over the subprocess service's credential-scrubbed parent environment. |
-| `permissionMode` | `reject` | Kimi launch mode and unattended ACP permission behavior; see below. |
+| `permissionMode` | `reject` | ACP session mode and unattended permission behavior; see below. |
 | `disposeEofGraceMs` | `6000` | Time in milliseconds allowed for cooperative shutdown after stdin EOF before termination escalation. |
 | `disposeGraceMs` | `3000` | Process-observation and managed termination grace in milliseconds. Both grace values must be positive, finite, and within Node's timer limit. |
 
@@ -65,21 +65,21 @@ Credential-shaped ambient variables are scrubbed by the Harness subprocess servi
 
 ### Permission modes
 
-| Value | Kimi launch | ACP permission requests |
+| Value | ACP session mode | ACP permission requests |
 | --- | --- | --- |
-| `reject` | No mode override; native Kimi settings apply | Cancel every request |
-| `yolo` | `--yolo`; routine edits and commands run automatically under Kimi's policy | Cancel remaining requests, including risky actions and questions |
-| `auto` | `--auto`; Kimi Never Ask mode | Select the first `allow_once` or `allow_always` option if a request still arrives |
+| `reject` | `default`; manual approvals | Cancel every request |
+| `yolo` | `yolo`; routine edits and commands run under Kimi's native yolo policy | Cancel remaining requests, including risky actions and questions |
+| `auto` | `auto`; Kimi's native automatic policy | Select the first `allow_once` or `allow_always` option if a request still arrives |
 
 No mode creates a human interaction channel in the parent Harness session. `auto` can modify files and execute commands without human approval; use it only in trusted, appropriately isolated workspaces.
 
-**`reject` is not a sandbox or a read-only guarantee.** It denies requests that Kimi sends over ACP, but operations allowed directly by native Kimi configuration do not produce such requests. Use operating-system or Harness workspace isolation when side effects must be constrained.
+**`reject` is not a sandbox or a read-only guarantee.** It denies requests that Kimi sends over ACP, but operations Kimi permits without making an ACP request can still proceed. Use operating-system or Harness workspace isolation when side effects must be constrained.
 
 ## Behavior
 
 - The provider accepts only a non-empty sequence of text blocks. Images and other content types are rejected before a process starts.
-- Every run uses a new package-local `node <kimi-code> [...] acp` process and a new ACP session. There is no process pooling, follow-up input, or resume.
-- Startup completes ACP `initialize` and `session/new` before publishing the run. Startup failures clean up the private process before rejecting.
+- Every run uses a new package-local `node <kimi-code> acp` process and a new ACP session. There is no process pooling, follow-up input, or resume.
+- Startup completes ACP `initialize`, `session/new`, `session/set_mode`, and optional `session/set_config_option` before publishing the run. Configuration failures use the `configure-session` stage and clean up the private process before rejecting.
 - `session/prompt` executes exactly one task. Streamed `agent_message_chunk` text is collected; thoughts, plans, tool calls, and other updates are consumed but not returned.
 - ACP stop reasons map to Harness `completed`, `max-tokens`, `refusal`, `aborted`, or `error`. Unknown reasons and a successful stop with no assistant text are treated as errors.
 - Cancellation sends best-effort `session/cancel`, settles locally without waiting for a cooperative child, and remains backed by process teardown.
