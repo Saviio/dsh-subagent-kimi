@@ -16,11 +16,15 @@
 
 ## 安装
 
-通过 DeepSeek Harness 插件/Bundle 管理器安装 `dsh-subagent-kimi`，或在承载 Harness 组合的 Node 项目中安装：
+将 Bundle 安装进 DeepSeek Harness Profile，`<name>` 替换为 `web`、`headless`、`sdk`、`acp` 或自定义 Profile 名称：
 
 ```sh
-npm install dsh-subagent-kimi
+dsh plugin --profile <name> add dsh-subagent-kimi
 ```
+
+该命令通过 `pnpm` 管理 Profile 依赖，因此需要确保 `pnpm` 在 `PATH` 中。如果 DSH 提示需要重启，请重启后使用。在 Web 或 Desktop 中，也可以打开 **Plugins → 添加插件**，输入 `dsh-subagent-kimi`，然后安装并启用该 Bundle。
+
+对于自定义 Node 组合，`npm install dsh-subagent-kimi` 只安装 JavaScript 依赖，不等同于在 DSH Profile 中安装并启用插件。此时需要按下面的示例挂载 provider 和工具，或将 Bundle 纳入自己的组合。
 
 Bundle 元数据会加载 `cordis.patch.yml`、注册 `kimi` provider，并将 `subagent_kimi` 添加为 Harness 全局工具。仅加载 Bundle 不会启动 Kimi；只有实际发生委派时才创建进程。
 

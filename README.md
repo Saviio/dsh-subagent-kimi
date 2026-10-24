@@ -16,11 +16,15 @@ The package pins `@moonshot-ai/kimi-code@2.3.1` and invokes its package-local CL
 
 ## Install
 
-Install `dsh-subagent-kimi` through the DeepSeek Harness plugin/bundle manager, or add it to the Node project containing your Harness composition:
+Install the bundle into a DeepSeek Harness profile, replacing `<name>` with `web`, `headless`, `sdk`, `acp`, or your custom profile name:
 
 ```sh
-npm install dsh-subagent-kimi
+dsh plugin --profile <name> add dsh-subagent-kimi
 ```
+
+The CLI uses `pnpm` for profile package operations, so `pnpm` must be available on `PATH`. Restart DSH if it reports that a restart is required. In Web or Desktop, you can instead open **Plugins → Add plugin**, enter `dsh-subagent-kimi`, and install and enable the bundle there.
+
+For a custom Node composition, `npm install dsh-subagent-kimi` installs only the JavaScript dependency; it does not install or enable the bundle in a DSH profile. Mount the provider and tool as shown below, or include the bundle in your own composition.
 
 The bundle metadata loads `cordis.patch.yml`, registers the `kimi` provider, and exposes `subagent_kimi` as a global Harness tool. Loading the bundle does not start Kimi; a process is created only for an actual delegation.
 
